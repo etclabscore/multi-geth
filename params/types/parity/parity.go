@@ -72,8 +72,9 @@ type ParityChainSpec struct {
 		} `json:"Ethash,omitempty"`
 		Clique struct {
 			Params struct {
-				Period *ParityU64 `json:"period,omitempty"`
-				Epoch  *ParityU64 `json:"epoch,omitempty"`
+				Period            *ParityU64 `json:"period,omitempty"`
+				Epoch             *ParityU64 `json:"epoch,omitempty"`
+				EIP3436Transition *ParityU64 `json:"eip3436,omitempty"`
 			} `json:"params,omitempty"`
 		} `json:"Clique,omitempty"`
 	} `json:"engine"`
@@ -136,9 +137,9 @@ type ParityChainSpec struct {
 	Accounts map[common.UnprefixedAddress]*ParityChainSpecAccount `json:"accounts"`
 }
 
-func (c *ParityChainSpec) String() string {
+func (spec *ParityChainSpec) String() string {
 	cc := &ParityChainSpec{}
-	*cc = *c
+	*cc = *spec
 	if cc.Engine.Ethash.Params.DaoHardforkAccounts != nil {
 		cc.Engine.Ethash.Params.DaoHardforkAccounts = nil
 	}

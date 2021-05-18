@@ -19,6 +19,7 @@ package clique
 import (
 	"bytes"
 	"crypto/ecdsa"
+	"errors"
 	"sort"
 	"testing"
 
@@ -72,6 +73,15 @@ func (ap *testerAccountPool) address(account string) common.Address {
 	}
 	// Resolve and return the Ethereum address
 	return crypto.PubkeyToAddress(ap.accounts[account].PublicKey)
+}
+
+func (ap *testerAccountPool) name(address common.Address) string {
+	for k, v := range ap.accounts {
+		if crypto.PubkeyToAddress(v.PublicKey) == address {
+			return k
+		}
+	}
+	return ""
 }
 
 // sign calculates a Clique digital signature for the given block and embeds it
@@ -466,7 +476,7 @@ func TestClique(t *testing.T) {
 		if failed {
 			continue
 		}
-		if _, err = chain.InsertChain(batches[len(batches)-1]); err != tt.failure {
+		if _, err = chain.InsertChain(batches[len(batches)-1]); !errors.Is(err, tt.failure) {
 			t.Errorf("test %d: failure mismatch: have %v, want %v", i, err, tt.failure)
 		}
 		if tt.failure != nil {

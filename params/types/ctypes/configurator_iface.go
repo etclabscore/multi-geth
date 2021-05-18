@@ -205,6 +205,13 @@ type CliqueConfigurator interface {
 	SetCliquePeriod(n uint64) error
 	GetCliqueEpoch() uint64
 	SetCliqueEpoch(n uint64) error
+
+	/*
+		Clique protocol rules to avoid deadlocks caused by ambiguity in the original consensus protocol definition.
+		https://github.com/ethereum/EIPs/blob/master/EIPS/eip-3436.md
+	*/
+	GetCliqueEIP3436Transition() *uint64
+	SetCliqueEIP3436Transition(n *uint64) error
 }
 
 type BlockSealer interface {

@@ -115,6 +115,9 @@ type Engine interface {
 	// that a new block should have.
 	CalcDifficulty(chain ChainHeaderReader, time uint64, parent *types.Header) *big.Int
 
+	// Reorg defines block reorganization logic following consensus rules like heaviest chain.
+	ElectCanonical(chain ChainHeaderReader, currentTD, proposedTD *big.Int, current, proposed *types.Header, blockPreserve func(*types.Header) bool) (bool, error)
+
 	// APIs returns the RPC APIs this consensus engine provides.
 	APIs(chain ChainHeaderReader) []rpc.API
 

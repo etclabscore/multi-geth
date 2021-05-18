@@ -1210,3 +1210,15 @@ func (spec *ParityChainSpec) UpdateAccount(address common.Address, bal *big.Int,
 	}
 	return nil
 }
+
+func (spec *ParityChainSpec) GetCliqueEIP3436Transition() *uint64 {
+	if spec.GetConsensusEngineType() != ctypes.ConsensusEngineT_Clique {
+		return nil
+	}
+	return spec.Engine.Clique.Params.EIP3436Transition.Uint64P()
+}
+
+func (spec *ParityChainSpec) SetCliqueEIP3436Transition(n *uint64) error {
+	spec.Engine.Clique.Params.EIP3436Transition = new(ParityU64).SetUint64(n)
+	return nil
+}

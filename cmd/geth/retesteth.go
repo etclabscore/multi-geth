@@ -267,6 +267,10 @@ func (e *NoRewardEngine) CalcDifficulty(chain consensus.ChainHeaderReader, time 
 	return e.inner.CalcDifficulty(chain, time, parent)
 }
 
+func (e *NoRewardEngine) ElectCanonical(chain consensus.ChainHeaderReader, currentTD, proposedTD *big.Int, current, proposed *types.Header, blockPreserve func(*types.Header) bool) (bool, error) {
+	return e.inner.ElectCanonical(chain, nil, nil, current, proposed, nil)
+}
+
 func (e *NoRewardEngine) APIs(chain consensus.ChainHeaderReader) []rpc.API {
 	return e.inner.APIs(chain)
 }

@@ -20,9 +20,11 @@ package clique
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"math/big"
 	"math/rand"
+	"strings"
 	"sync"
 	"time"
 
@@ -42,6 +44,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/ethereum/go-ethereum/trie"
 	lru "github.com/hashicorp/golang-lru"
+	"github.com/holiman/uint256"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -469,7 +472,7 @@ func (c *Clique) verifySeal(chain consensus.ChainHeaderReader, header *types.Hea
 		if recent == signer {
 			// Signer is among recents, only fail if the current block doesn't shift it out
 			if limit := uint64(len(snap.Signers)/2 + 1); seen > number-limit {
-				return errRecentlySigned
+				return fmt.Errorf("%w: limit=%d seen=%d number=%d number-limit=%d", errRecentlySigned, limit, seen, number, number-limit)
 			}
 		}
 	}
@@ -477,10 +480,10 @@ func (c *Clique) verifySeal(chain consensus.ChainHeaderReader, header *types.Hea
 	if !c.fakeDiff {
 		inturn := snap.inturn(header.Number.Uint64(), signer)
 		if inturn && header.Difficulty.Cmp(diffInTurn) != 0 {
-			return errWrongDifficulty
+			return fmt.Errorf("%w: %s", errWrongDifficulty, "inturn")
 		}
 		if !inturn && header.Difficulty.Cmp(diffNoTurn) != 0 {
-			return errWrongDifficulty
+			return fmt.Errorf("%w: %s", errWrongDifficulty, "!inturn")
 		}
 	}
 	return nil
@@ -690,6 +693,160 @@ func (c *Clique) APIs(chain consensus.ChainHeaderReader) []rpc.API {
 		Service:   &API{chain: chain, clique: c},
 		Public:    false,
 	}}
+}
+
+// IsReorg decides if a proposed block (header) should be preferred over the current header.
+// nb. blockPreserve is not used.
+func (c *Clique) ElectCanonical(chain consensus.ChainHeaderReader, currentTD, proposedTD *big.Int, current, proposed *types.Header, blockPreserve func(*types.Header) bool) (preferProposed bool, err error) {
+	// 1. Greater TD
+	if currentTD.Cmp(proposedTD) > 0 {
+		return false, nil
+	}
+	// Proposed (external) total difficulty is equal to or equivalent local.
+	if proposedTD.Cmp(currentTD) > 0 {
+		return true, nil
+	}
+
+	// Blocks have same total difficulty.
+
+	// 2. Lesser block height
+	if current.Number.Cmp(proposed.Number) < 0 {
+		return false, nil
+	}
+	if proposed.Number.Cmp(current.Number) < 0 {
+		return true, nil
+	}
+
+	// Blocks have same number.
+
+	// EIP3436 says that the status quo preference algorithm is limited
+	// to greater net difficulty, but that isn't the case (at least in practice,
+	// withstanding whatever the EIP-255 initial Clique spec says).
+	// In practice, the status quo is/was that the shorter segment is
+	// preferred.
+	if c.config.EIP3436Transition == nil || c.config.EIP3436Transition.Cmp(current.Number) > 0 {
+		return false, nil
+	}
+
+	// 3. Signer index
+	// 4. Block hash uint256
+	return c.Eip3436Rule3rule4(chain, current, proposed)
+}
+
+// Eip3436Rule3rule4 implements Rule 3 and Rule 4 of EIP3436, which are the only MODIFIED (added) consensus rules the spec
+// defines (vs. pre-existing rules).
+/*
+When a Click validator is choosing between two different chain head blocks to build a nre proposed block they should chose the blocks from the following priority list.
+
+    1 Choose the block with the most total difficulty.
+    2 Then choose the block with the lowest block number.
+    3 Then choose the block whose validator had the least recent in-turn block assignment.
+    4 Then choose the block with the lowest hash.
+
+When resolving rule 3 clients should use the following formula, where
+
+validator_index is the integer index of the validator that signed the block when sorted as per epoch checkpointing,
+header_number is the number of the header, and
+validator_count is the count of the current validators.
+
+Clients should choose the block with the largest value. Note that an in-turn block is considered to be the most recent in-turn block.
+
+```
+(header_number - validator_index) % validator_count
+```
+
+When resolving rule 4 the hash should be converted into an unsigned 256 bit integer.
+*/
+func (c *Clique) Eip3436Rule3rule4(chain consensus.ChainHeaderReader, current, proposed *types.Header) (acceptProposed bool, err error) {
+	want, err := c.Eip3436Rule3(chain, current, proposed)
+	if err != nil {
+		return false, err
+	}
+	if want == (common.Address{}) {
+		// Rule 3 was a tie.
+		// Use Rule 4.
+		return c.Eip3436Rule4(current, proposed)
+	}
+	// Rule 3 was decisive.
+	currentAuthor, err := c.Author(current)
+	if err != nil {
+		return false, err
+	}
+	if want == currentAuthor {
+		return false, nil
+	}
+	return true, nil
+}
+
+// Eip3436Rule3 selects the block (header) whose validator had the least recent in-turn block assignment.
+// If the compared signer addresses yield an equivalent value  this is considered non-definitive and
+// an empty value is returned.
+func (c *Clique) Eip3436Rule3(chain consensus.ChainHeaderReader, current, proposed *types.Header) (preferredAuthor common.Address, err error) {
+	snap, err := c.snapshot(chain, current.Number.Uint64()-1, current.ParentHash, nil)
+	if err != nil {
+		return common.Address{}, err
+	}
+	a, err := c.Author(current)
+	if err != nil {
+		return common.Address{}, err
+	}
+	b, err := c.Author(proposed)
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	sortedSigners := snap.signers()
+	validatorCount := uint64(len(sortedSigners))
+
+	var validatorIndexA, validatorIndexB uint64
+	for i := uint64(0); i < validatorCount; i++ {
+		if sortedSigners[i] == a {
+			validatorIndexA = i
+		} else if sortedSigners[i] == b {
+			validatorIndexB = i
+		}
+	}
+
+	evalA := (current.Number.Uint64() - validatorIndexA) % validatorCount
+	evalB := (current.Number.Uint64() - validatorIndexB) % validatorCount
+
+	if evalA > evalB {
+		return a, nil
+	}
+	if evalB > evalA {
+		return b, nil
+	}
+	return common.Address{}, nil
+}
+
+// Eip3436Rule4 selects the block (header) with the lowest hash when converted to an unsigned 256 bit integer.
+func (c *Clique) Eip3436Rule4(current, proposed *types.Header) (acceptProposed bool, err error) {
+	currentN, err := hashToUint256(current.Hash())
+	if err != nil {
+		return false, err
+	}
+	proposedN, err := hashToUint256(proposed.Hash())
+	if err != nil {
+		return false, err
+	}
+	// Boolean should be defined truthy where proposed hash is less than current.
+	return proposedN.Lt(currentN), nil
+}
+
+// hashToUint256 converts a hash to a uint256 integer.
+func hashToUint256(h common.Hash) (*uint256.Int, error) {
+	hex := h.Hex()
+
+	// The library used will error if the hex value has any leading 0's,
+	// so those will be trimmed.
+	trimPre := ""
+	if strings.HasPrefix(hex, "0x") {
+		trimPre = strings.TrimPrefix(hex, "0x")
+	} else if strings.HasPrefix(hex, "0X") {
+		trimPre = strings.TrimPrefix(hex, "0X")
+	}
+	trimPre = strings.TrimLeft(trimPre, "0")
+	return uint256.FromHex("0x" + trimPre)
 }
 
 // SealHash returns the hash of a block prior to it being sealed.

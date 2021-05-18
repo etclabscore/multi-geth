@@ -751,3 +751,11 @@ func (g *Genesis) GetCliqueEpoch() uint64 {
 func (g *Genesis) SetCliqueEpoch(n uint64) error {
 	return g.Config.SetCliqueEpoch(n)
 }
+
+func (g *Genesis) GetCliqueEIP3436Transition() *uint64 {
+	return g.Config.GetCliqueEIP3436Transition()
+}
+
+func (g *Genesis) SetCliqueEIP3436Transition(n *uint64) error {
+	return g.Config.SetCliqueEIP3436Transition(n)
+}

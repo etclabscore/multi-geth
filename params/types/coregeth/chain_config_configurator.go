@@ -849,3 +849,18 @@ func (c *CoreGethChainConfig) SetCliqueEpoch(n uint64) error {
 	c.Clique.Epoch = n
 	return nil
 }
+
+func (c *CoreGethChainConfig) GetCliqueEIP3436Transition() *uint64 {
+	if c.Clique == nil {
+		return nil
+	}
+	return bigNewU64(c.Clique.EIP3436Transition)
+}
+
+func (c *CoreGethChainConfig) SetCliqueEIP3436Transition(n *uint64) error {
+	if c.Clique == nil {
+		return ctypes.ErrUnsupportedConfigFatal
+	}
+	c.Clique.EIP3436Transition = setBig(c.Clique.EIP3436Transition, n)
+	return nil
+}

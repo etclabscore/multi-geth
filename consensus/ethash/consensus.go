@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	mrand "math/rand"
 	"runtime"
 	"time"
 
@@ -576,6 +577,45 @@ func (ethash *Ethash) SealHash(header *types.Header) (hash common.Hash) {
 	})
 	hasher.Sum(hash[:0])
 	return hash
+}
+
+func (ethash *Ethash) ElectCanonical(chain consensus.ChainHeaderReader, currentTD, proposedTD *big.Int, current, proposed *types.Header, blockPreserve func(*types.Header) bool) (preferProposed bool, err error) {
+	// 1. Greater TD
+	// If the total difficulty is higher than our known, add it to the canonical chain
+	if currentTD.Cmp(proposedTD) > 0 {
+		return false, nil
+	}
+	// Proposed (external) total difficulty is equal to or equivalent local.
+	if proposedTD.Cmp(currentTD) > 0 {
+		return true, nil
+	}
+
+	// Blocks have same total difficulty.
+
+	// 2. Lesser block height
+	if current.Number.Cmp(proposed.Number) < 0 {
+		return false, nil
+	}
+	if proposed.Number.Cmp(current.Number) < 0 {
+		return true, nil
+	}
+
+	// This clause reduces the vulnerability to selfish mining.
+	// Please refer to http://www.cs.cornell.edu/~ie53/publications/btcProcFC.pdf
+	tails := mrand.Float64() < 0.5
+
+	// The block preserve function allows preference to be yielded to miner interests;
+	// (by default) this means
+	// - blocks produced by the miner and
+	// - blocks with transactions which would be considered local by the miner.
+	if blockPreserve != nil {
+		currentPreserve, proposedPreserve := blockPreserve(current), blockPreserve(proposed)
+		return !currentPreserve && (proposedPreserve || tails), nil
+	}
+
+	// In the (rare, non-default) case that miner interest isn't established by
+	// a preserve function, we still need to return the coin toss.
+	return tails, nil
 }
 
 // Some weird constants to avoid constant memory allocs for them.

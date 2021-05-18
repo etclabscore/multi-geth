@@ -11,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/params/types/ctypes"
 )
 
 // errReorgFinality represents an error caused by artificial finality mechanisms.
@@ -65,6 +66,9 @@ func (bc *BlockChain) EnableArtificialFinality(enable bool, logValues ...interfa
 // finality feature setting.
 // This status is agnostic of feature activation by chain configuration.
 func (bc *BlockChain) IsArtificialFinalityEnabled() bool {
+	if bc.Config().GetConsensusEngineType() != ctypes.ConsensusEngineT_Ethash {
+		return false
+	}
 	return atomic.LoadInt32(&bc.artificialFinalityEnabledStatus) == 1
 }
 

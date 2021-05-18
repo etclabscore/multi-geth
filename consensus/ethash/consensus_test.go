@@ -84,3 +84,57 @@ func TestCalcDifficulty(t *testing.T) {
 		}
 	}
 }
+
+func TestEthash_ElectCanonical(t *testing.T) {
+	var (
+		one = big.NewInt(1)
+		two = big.NewInt(2)
+	)
+	cases := []struct {
+		currentTD, proposedTD uint64
+		current, proposed     *types.Header
+		preserve              func(header *types.Header) bool
+
+		expect     bool
+		stochastic bool // expect that we cannot expect with precision
+		// no error check (error will never be returned)
+	}{
+		// Total difficulty condition (prefer greater).
+		{
+			expect:    true,
+			currentTD: 42, proposedTD: 43,
+		},
+		{
+			expect:    false,
+			currentTD: 43, proposedTD: 42,
+		},
+
+		// Number condition (prefer lesser).
+		{
+			expect: true,
+
+			current: &types.Header{Number: two}, proposed: &types.Header{Number: one},
+			currentTD: 42, proposedTD: 42,
+		},
+		{
+			expect:     false,
+			stochastic: true,
+
+			current: &types.Header{Number: two}, proposed: &types.Header{Number: two},
+			currentTD: 42, proposedTD: 42,
+		},
+	}
+
+	eh := NewFaker()
+	for i, c := range cases {
+		preferProposed, err := eh.ElectCanonical(nil, new(big.Int).SetUint64(c.currentTD), new(big.Int).SetUint64(c.proposedTD), c.current, c.proposed, c.preserve)
+		if err != nil {
+			t.Fatalf("case: %d, want: <nil>, got: %v", i, err)
+		}
+
+		if !c.stochastic && preferProposed != c.expect {
+			t.Errorf("case: %d, want: %v, got: %v", i, c.expect, preferProposed)
+		}
+
+	}
+}
