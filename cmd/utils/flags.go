@@ -1591,8 +1591,8 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 	CheckExclusive(ctx, DeveloperFlag, DeveloperPoWFlag, MainnetFlag, RopstenFlag, RinkebyFlag, GoerliFlag, YoloV3Flag, ClassicFlag, KottiFlag, MordorFlag, MintMeFlag)
 	CheckExclusive(ctx, LightServeFlag, SyncModeFlag, "light")
 	CheckExclusive(ctx, DeveloperFlag, DeveloperPoWFlag, ExternalSignerFlag) // Can't use both ephemeral unlocked and external signer
-	CheckExclusive(ctx, GCModeFlag, "archive", TxLookupLimitFlag)
 	if ctx.GlobalString(GCModeFlag.Name) == "archive" && ctx.GlobalUint64(TxLookupLimitFlag.Name) != 0 {
+		CheckExclusive(ctx, GCModeFlag, "archive", TxLookupLimitFlag)
 		ctx.GlobalSet(TxLookupLimitFlag.Name, "0")
 		log.Warn("Disable transaction unindexing for archive node")
 	}
