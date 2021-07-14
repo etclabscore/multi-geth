@@ -791,3 +791,11 @@ func (g *Genesis) GetCliqueEpoch() uint64 {
 func (g *Genesis) SetCliqueEpoch(n uint64) error {
 	return g.Config.SetCliqueEpoch(n)
 }
+
+func (g *Genesis) GetKeccakBlockRewardSchedule() ctypes.Uint64BigMapEncodesHex {
+	return g.Config.GetKeccakBlockRewardSchedule()
+}
+
+func (g *Genesis) SetKeccakBlockRewardSchedule(m ctypes.Uint64BigMapEncodesHex) error {
+	return g.Config.SetKeccakBlockRewardSchedule(m)
+}

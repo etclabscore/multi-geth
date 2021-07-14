@@ -192,6 +192,12 @@ func NewNode(datadir string, config *NodeConfig) (stack *Node, _ error) {
 				config.EthereumNetworkID = 7
 			}
 		}
+		if config.EthereumGenesis == AstorGenesis() {
+			genesis.Config = params.AstorChainConfig
+			if config.EthereumNetworkID == 1 {
+				config.EthereumNetworkID = 212
+			}
+		}
 	}
 	// Register the Ethereum protocol if requested
 	if config.EthereumEnabled {

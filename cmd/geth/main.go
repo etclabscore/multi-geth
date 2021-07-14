@@ -146,6 +146,7 @@ var (
 		utils.MintMeFlag,
 		utils.ClassicFlag,
 		utils.MordorFlag,
+		utils.AstorFlag,
 		utils.KottiFlag,
 		utils.VMEnableDebugFlag,
 		utils.NetworkIdFlag,
@@ -299,6 +300,9 @@ func checkMainnet(ctx *cli.Context) bool {
 
 	case ctx.GlobalIsSet(utils.MordorFlag.Name):
 		log.Info("Starting Geth on Mordor testnet...")
+
+	case ctx.GlobalIsSet(utils.AstorFlag.Name):
+		log.Info("Starting Geth on Astor testnet...")
 
 	case ctx.GlobalIsSet(utils.KottiFlag.Name):
 		log.Info("Starting Geth on Kotti testnet...")

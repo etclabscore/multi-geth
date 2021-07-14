@@ -979,7 +979,7 @@ func (spec *ParityChainSpec) SetEthashECIP1017EraRounds(n *uint64) error {
 }
 
 func (spec *ParityChainSpec) GetEthashEIP100BTransition() *uint64 {
-	if spec.GetConsensusEngineType() != ctypes.ConsensusEngineT_Ethash {
+	if spec.GetConsensusEngineType() != ctypes.ConsensusEngineT_Ethash && spec.GetConsensusEngineType() != ctypes.ConsensusEngineT_Keccak {
 		return nil
 	}
 	return spec.Engine.Ethash.Params.EIP100bTransition.Uint64P()
@@ -1111,6 +1111,21 @@ func (spec *ParityChainSpec) GetCliqueEpoch() uint64 {
 
 func (spec *ParityChainSpec) SetCliqueEpoch(i uint64) error {
 	spec.Engine.Clique.Params.Epoch = new(ParityU64).SetUint64(&i)
+	return nil
+}
+
+func (spec *ParityChainSpec) GetKeccakBlockRewardSchedule() ctypes.Uint64BigMapEncodesHex {
+	if spec.GetConsensusEngineType() != ctypes.ConsensusEngineT_Keccak {
+		return nil
+	}
+	if reflect.DeepEqual(spec.Engine.Keccak, reflect.Zero(reflect.TypeOf(spec.Engine.Keccak)).Interface()) {
+		return nil
+	}
+	return ctypes.Uint64BigMapEncodesHex(spec.Engine.Keccak.Params.BlockReward)
+}
+
+func (spec *ParityChainSpec) SetKeccakBlockRewardSchedule(input ctypes.Uint64BigMapEncodesHex) error {
+	spec.Engine.Keccak.Params.BlockReward = ctypes.Uint64BigValOrMapHex(input)
 	return nil
 }
 

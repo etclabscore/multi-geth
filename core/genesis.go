@@ -183,6 +183,8 @@ func configOrDefault(g *genesisT.Genesis, ghash common.Hash) ctypes.ChainConfigu
 		return params.KottiChainConfig
 	case ghash == params.MordorGenesisHash:
 		return params.MordorChainConfig
+	case ghash == params.AstorGenesisHash:
+		return params.AstorChainConfig
 	case ghash == params.RopstenGenesisHash:
 		return params.RopstenChainConfig
 	case ghash == params.YoloV3GenesisHash:

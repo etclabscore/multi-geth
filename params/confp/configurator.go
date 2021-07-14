@@ -250,6 +250,16 @@ func Equivalent(a, b ctypes.ChainConfigurator) error {
 		if a.GetCliquePeriod() != b.GetCliquePeriod() {
 			return fmt.Errorf("mismatch clique periods: A: %v, B: %v", a.GetCliquePeriod(), b.GetCliquePeriod())
 		}
+	} else if a.GetConsensusEngineType() == ctypes.ConsensusEngineT_Keccak {
+		for _, f := range fa { // fa and fb are fork-equivalent
+			ar := ctypes.KeccakBlockReward(a, new(big.Int).SetUint64(f))
+			br := ctypes.KeccakBlockReward(b, new(big.Int).SetUint64(f))
+			if ar.Cmp(br) != 0 {
+				return fmt.Errorf("mismatch block reward, fork block: %v, A: %v, B: %v", f, ar, br)
+			}
+			// TODO: add difficulty comparison
+			// Currently tough/complex to do because of necessary overhead (ie build a parent block).
+		}
 	}
 	return nil
 }

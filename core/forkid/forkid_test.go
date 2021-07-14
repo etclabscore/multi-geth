@@ -437,6 +437,11 @@ func TestGenerateSpecificationCases(t *testing.T) {
 			params.MordorGenesisHash,
 		},
 		{
+			"Astor",
+			params.AstorChainConfig,
+			params.AstorGenesisHash,
+		},
+		{
 			"Morden",
 			&coregeth.CoreGethChainConfig{
 				Ethash:            &ctypes.EthashConfig{},

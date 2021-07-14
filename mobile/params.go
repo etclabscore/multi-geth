@@ -58,9 +58,18 @@ func GoerliGenesis() string {
 	return string(enc)
 }
 
-// MordorGenesis returns the JSON spec to use for the Kotti test network
+// MordorGenesis returns the JSON spec to use for the Mordor test network
 func MordorGenesis() string {
 	enc, err := json.Marshal(params.DefaultMordorGenesisBlock())
+	if err != nil {
+		panic(err)
+	}
+	return string(enc)
+}
+
+// AstorGenesis returns the JSON spec to use for the Astor test network
+func AstorGenesis() string {
+	enc, err := json.Marshal(params.DefaultAstorGenesisBlock())
 	if err != nil {
 		panic(err)
 	}

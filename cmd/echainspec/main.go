@@ -51,6 +51,7 @@ var defaultChainspecValues = map[string]ctypes.Configurator{
 	"classic": params.DefaultClassicGenesisBlock(),
 	"kotti":   params.DefaultKottiGenesisBlock(),
 	"mordor":  params.DefaultMordorGenesisBlock(),
+	"astor":   params.DefaultAstorGenesisBlock(),
 
 	"foundation": params.DefaultGenesisBlock(),
 	"ropsten":    params.DefaultRopstenGenesisBlock(),

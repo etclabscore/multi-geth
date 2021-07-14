@@ -98,6 +98,11 @@ func Convert(from, to interface{}) error {
 		if err := convert(k, fromChainer, toChainer); err != nil {
 			return err
 		}
+	case ctypes.ConsensusEngineT_Keccak:
+		k := reflect.TypeOf((*ctypes.KeccakConfigurator)(nil)).Elem()
+		if err := convert(k, fromChainer, toChainer); err != nil {
+			return err
+		}
 	case ctypes.ConsensusEngineT_Lyra2:
 		k := reflect.TypeOf((*ctypes.Lyra2Configurator)(nil)).Elem()
 		if err := convert(k, fromChainer, toChainer); err != nil {

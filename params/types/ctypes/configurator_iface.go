@@ -171,6 +171,7 @@ type ConsensusEnginator interface {
 	MustSetConsensusEngineType(t ConsensusEngineT) error
 	EthashConfigurator
 	CliqueConfigurator
+	KeccakConfigurator
 
 	// Catalyst: ETH -> ETH2 PoS transition helper
 	GetCatalystTransition() *uint64
@@ -218,6 +219,11 @@ type EthashConfigurator interface {
 	SetEthashDifficultyBombDelaySchedule(m Uint64BigMapEncodesHex) error
 	GetEthashBlockRewardSchedule() Uint64BigMapEncodesHex
 	SetEthashBlockRewardSchedule(m Uint64BigMapEncodesHex) error
+}
+
+type KeccakConfigurator interface {
+	GetKeccakBlockRewardSchedule() Uint64BigMapEncodesHex
+	SetKeccakBlockRewardSchedule(m Uint64BigMapEncodesHex) error
 }
 
 type CliqueConfigurator interface {

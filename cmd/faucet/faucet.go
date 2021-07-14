@@ -69,6 +69,7 @@ var (
 	foundationFlag = flag.Bool("chain.foundation", false, "Configure genesis and bootnodes for foundation chain defaults")
 	classicFlag    = flag.Bool("chain.classic", false, "Configure genesis and bootnodes for classic chain defaults")
 	mordorFlag     = flag.Bool("chain.mordor", false, "Configure genesis and bootnodes for mordor chain defaults")
+	astorFlag      = flag.Bool("chain.astor", false, "Configure genesis and bootnodes for astor chain defaults")
 	kottiFlag      = flag.Bool("chain.kotti", false, "Configure genesis and bootnodes for kotti chain defaults")
 	testnetFlag    = flag.Bool("chain.testnet", false, "Configure genesis and bootnodes for testnet chain defaults")
 	rinkebyFlag    = flag.Bool("chain.rinkeby", false, "Configure genesis and bootnodes for rinkeby chain defaults")
@@ -146,6 +147,8 @@ func faucetDirFromChainIndicators(chainID uint64, genesisHash common.Hash) strin
 		return filepath.Join(datadir, "kotti")
 	case params.MordorGenesisHash:
 		return filepath.Join(datadir, "mordor")
+	case params.AstorGenesisHash:
+		return filepath.Join(datadir, "astor")
 	}
 	return datadir
 }
@@ -159,6 +162,7 @@ func parseChainFlags() (gs *genesisT.Genesis, bs string, netid uint64) {
 		{*foundationFlag, params.DefaultGenesisBlock(), nil},
 		{*classicFlag, params.DefaultClassicGenesisBlock(), nil},
 		{*mordorFlag, params.DefaultMordorGenesisBlock(), nil},
+		{*astorFlag, params.DefaultAstorGenesisBlock(), nil},
 		{*testnetFlag, params.DefaultRopstenGenesisBlock(), nil},
 		{*rinkebyFlag, params.DefaultRinkebyGenesisBlock(), nil},
 		{*kottiFlag, params.DefaultKottiGenesisBlock(), nil},

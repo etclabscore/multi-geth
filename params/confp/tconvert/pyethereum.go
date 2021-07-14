@@ -29,8 +29,8 @@ import (
 // NewPyEthereumGenesisSpec converts a go-ethereum genesis block into a Parity specific
 // chain specification format.
 func NewPyEthereumGenesisSpec(network string, genesis *genesisT.Genesis) (*pyethereum.PyEthereumGenesisSpec, error) {
-	// Only ethash is currently supported between go-ethereum and pyethereum
-	if genesis.Config.(*coregeth.CoreGethChainConfig).Ethash == nil {
+	// Only ethash or keccak is currently supported between go-ethereum and pyethereum
+	if genesis.Config.(*coregeth.CoreGethChainConfig).Ethash == nil && genesis.Config.(*coregeth.CoreGethChainConfig).Keccak == nil {
 		return nil, errors.New("unsupported consensus engine")
 	}
 	spec := &pyethereum.PyEthereumGenesisSpec{

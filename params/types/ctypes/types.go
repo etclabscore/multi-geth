@@ -272,6 +272,7 @@ const (
 	ConsensusEngineT_Unknown = iota
 	ConsensusEngineT_Ethash
 	ConsensusEngineT_Clique
+	ConsensusEngineT_Keccak
 	ConsensusEngineT_Lyra2
 )
 
@@ -281,6 +282,8 @@ func (c ConsensusEngineT) String() string {
 		return "ethash"
 	case ConsensusEngineT_Clique:
 		return "clique"
+	case ConsensusEngineT_Keccak:
+		return "keccak"
 	case ConsensusEngineT_Lyra2:
 		return "lyra2"
 	default:
@@ -294,6 +297,10 @@ func (c ConsensusEngineT) IsEthash() bool {
 
 func (c ConsensusEngineT) IsClique() bool {
 	return c == ConsensusEngineT_Clique
+}
+
+func (c ConsensusEngineT) IsKeccak() bool {
+	return c == ConsensusEngineT_Keccak
 }
 
 func (c ConsensusEngineT) IsLyra2() bool {
@@ -368,6 +375,14 @@ type EthashConfig struct{}
 // String implements the stringer interface, returning the consensus engine details.
 func (c *EthashConfig) String() string {
 	return "ethash"
+}
+
+// KeccakConfig is the consensus engine configs for proof-of-work based sealing.
+type KeccakConfig struct{}
+
+// String implements the stringer interface, returning the consensus engine details.
+func (c *KeccakConfig) String() string {
+	return "keccak"
 }
 
 // CliqueConfig is the consensus engine configs for proof-of-authority based sealing.

@@ -822,14 +822,14 @@ func (c *ChainConfig) SetEthashECIP1017EraRounds(n *uint64) error {
 }
 
 func (c *ChainConfig) GetEthashEIP100BTransition() *uint64 {
-	if c.GetConsensusEngineType() != ctypes.ConsensusEngineT_Ethash {
+	if c.GetConsensusEngineType() != ctypes.ConsensusEngineT_Ethash && c.GetConsensusEngineType() != ctypes.ConsensusEngineT_Keccak {
 		return nil
 	}
 	return bigNewU64(c.ByzantiumBlock)
 }
 
 func (c *ChainConfig) SetEthashEIP100BTransition(i *uint64) error {
-	if c.Ethash == nil {
+	if c.Ethash == nil && c.Keccak == nil {
 		return ctypes.ErrUnsupportedConfigFatal
 	}
 	c.ByzantiumBlock = setBig(c.ByzantiumBlock, i)
@@ -915,4 +915,15 @@ func (c *ChainConfig) SetCliqueEpoch(n uint64) error {
 	}
 	c.Clique.Epoch = n
 	return nil
+}
+
+func (c *ChainConfig) GetKeccakBlockRewardSchedule() ctypes.Uint64BigMapEncodesHex {
+	if c.GetConsensusEngineType() != ctypes.ConsensusEngineT_Keccak {
+		return nil
+	}
+	return nil
+}
+
+func (c *ChainConfig) SetKeccakBlockRewardSchedule(m ctypes.Uint64BigMapEncodesHex) error {
+	return ctypes.ErrUnsupportedConfigNoop
 }
